@@ -20,6 +20,24 @@ local Config = {
     NoClip = true, 
 }
 
+-- Kiểm tra sự tồn tại của Remote chuyển phe
+if ReplicatedStorage:FindFirstChild("Remotes") and ReplicatedStorage.Remotes:FindFirstChild("CommF_") then
+    local currentTeam = LocalPlayer.Team
+    -- Kiểm tra nếu người chơi chưa thuộc phe đã chỉ định trong cấu hình
+    if currentTeam.Name ~= Config.Team then
+        ReplicatedStorage.Remotes.CommF_:InvokeServer("SetTeam", Config.Team)
+        print("✅ Đã tự động gia nhập phe " .. Config.Team)
+    else
+        print("✅ Bạn đã thuộc phe " .. Config.Team .. " rồi!")
+    end
+else
+    print("⚠ Không tìm thấy Remote chuyển team!")
+end
+
+wait(1)
+
+
+
 
 
 
