@@ -1,0 +1,243 @@
+-- 📌 Tự động vào team Hải Quân
+local ReplicatedStorage = game:GetService("ReplicatedStorage")
+
+if ReplicatedStorage:FindFirstChild("Remotes") and ReplicatedStorage.Remotes:FindFirstChild("CommF_") then
+    local success, result = pcall(function()
+        return ReplicatedStorage.Remotes.CommF_:InvokeServer("SetTeam", "Marines")
+    end)
+    if success then
+        print("✅ Đã tự động vào team Marines!")
+    else
+        warn("❌ Lỗi khi vào team:", result)
+    end
+else
+    warn("⚠ Không tìm thấy remote SetTeam!")
+end
+
+wait(1)
+
+-- 🍎 Danh sách trái cây cần lưu
+local Fruits = {
+    ["Kilo Fruit"] = "Kilo-Kilo", ["Spin Fruit"] = "Spin-Spin", ["Rocket Fruit"] = "Rocket-Rocket",
+    ["Chop Fruit"] = "Chop-Chop", ["Spring Fruit"] = "Spring-Spring", ["Bomb Fruit"] = "Bomb-Bomb",
+    ["Smoke Fruit"] = "Smoke-Smoke", ["Spike Fruit"] = "Spike-Spike", ["Flame Fruit"] = "Flame-Flame",
+    ["Ice Fruit"] = "Ice-Ice", ["Sand Fruit"] = "Sand-Sand", ["Dark Fruit"] = "Dark-Dark",
+    ["Revive Fruit"] = "Ghost-Ghost", ["Diamond Fruit"] = "Diamond-Diamond", ["Light Fruit"] = "Light-Light",
+    ["Love Fruit"] = "Love-Love", ["Rubber Fruit"] = "Rubber-Rubber", ["Creation Fruit"] = "Barrier-Barrier",
+    ["Eagle Fruit"] = "Bird-Bird: Falcon", ["Magma Fruit"] = "Magma-Magma", ["Portal Fruit"] = "Portal-Portal",
+    ["Quake Fruit"] = "Quake-Quake", ["Human-Human: Buddha Fruit"] = "Human-Human: Buddha",
+    ["Spider Fruit"] = "Spider-Spider", ["Bird: Phoenix Fruit"] = "Bird-Bird: Phoenix",
+    ["Rumble Fruit"] = "Rumble-Rumble", ["Paw Fruit"] = "Pain-Pain", ["Gravity Fruit"] = "Gravity-Gravity",
+    ["Dough Fruit"] = "Dough-Dough", ["Shadow Fruit"] = "Shadow-Shadow", ["Venom Fruit"] = "Venom-Venom",
+    ["Control Fruit"] = "Control-Control", ["Spirit Fruit"] = "Spirit-Spirit", ["Dragon Fruit"] = "Dragon-Dragon",
+    ["Leopard Fruit"] = "Leopard-Leopard", ["T-Rex Fruit"] = "T-Rex-T-Rex", ["Mammoth Fruit"] = "Mammoth-Mammoth",
+    ["Blizzard Fruit"] = "Blizzard-Blizzard", ["Yeti Fruit"] = "Yeti-Yeti", ["Kitsune Fruit"] = "Kitsune-Kitsune"
+}
+
+-- 🧠 Hàm lưu trái cây
+local function storeFruits()
+    local player = game.Players.LocalPlayer
+    local backpack = player:FindFirstChild("Backpack")
+    local character = player.Character
+    local remote = ReplicatedStorage:FindFirstChild("Remotes") and ReplicatedStorage.Remotes:FindFirstChild("CommF_")
+
+    if not remote then return end
+
+    local function tryStore(tool)
+        local fruitID = Fruits[tool.Name]
+        if fruitID then
+            local success, result = pcall(function()
+                return remote:InvokeServer("StoreFruit", fruitID, tool)
+            end)
+            if success and result == "Success" then
+                print("✅ Lưu:", tool.Name)
+            end
+        end
+    end
+
+    if backpack then
+        for _, tool in pairs(backpack:GetChildren()) do
+            if tool:IsA("Tool") then
+                tryStore(tool)
+            end
+        end
+    end
+
+    if character then
+        for _, tool in pairs(character:GetChildren()) do
+            if tool:IsA("Tool") then
+                tryStore(tool)
+            end
+        end
+    end
+end
+
+-- 🧲 Hàm nhặt trái cây trong Workspace
+local function hopFruit()
+    local root = game.Players.LocalPlayer.Character and game.Players.LocalPlayer.Character:FindFirstChild("HumanoidRootPart")
+    if not root then return end
+
+    for _, fruit in pairs(workspace:GetChildren()) do
+        if fruit:IsA("Tool") and Fruits[fruit.Name] and fruit:FindFirstChild("Handle") then
+            root.CFrame = fruit.Handle.CFrame + Vector3.new(0, 3, 0)
+            task.wait(0.1)
+        end
+    end
+end
+
+-- 🌀 Tự động lưu trái + nhặt mỗi 0.1 giây
+task.spawn(function()
+    while task.wait(0.1) do
+        pcall(storeFruits)
+        pcall(hopFruit)
+    end
+end)
+
+-- 👀 Nếu có Tool mới xuất hiện (trái spawn), tự nhặt và lưu
+workspace.ChildAdded:Connect(function(obj)
+    if obj:IsA("Tool") and Fruits[obj.Name] then
+        task.wait(0.2)
+        hopFruit()
+        task.wait(0.2)
+        storeFruits()
+    end
+end)
+
+-- 🔁 Dự phòng lưu mỗi 1 giây
+task.spawn(function()
+    while task.wait(1) do
+        pcall(storeFruits)
+    end
+end)
+
+-- ✅ ESP trái cây
+local TweenService = game:GetService("TweenService")
+local Players = game:GetService("Players")
+local LocalPlayer = Players.LocalPlayer
+local HttpService = game:GetService("HttpService")
+local TeleportService = game:GetService("TeleportService")
+
+local fruitsESP = {}
+game:GetService("RunService").Heartbeat:Connect(function()
+    for _, v in pairs(workspace:GetChildren()) do
+        if v:IsA("Tool") and string.find(v.Name:lower(), "fruit") then
+            local handle = v:FindFirstChild("Handle")
+            if handle and not v:FindFirstChild("ESPBox") then
+                local box = Instance.new("BoxHandleAdornment", v)
+                box.Name = "ESPBox"
+                box.Adornee = handle
+                box.AlwaysOnTop = true
+                box.ZIndex = 5
+                box.Size = Vector3.new(2, 2, 2)
+                box.Transparency = 0.5
+                box.Color3 = Color3.fromRGB(0, 255, 0)
+
+                local billboard = Instance.new("BillboardGui", handle)
+                billboard.Name = "ESPInfo"
+                billboard.Size = UDim2.new(0, 200, 0, 70)
+                billboard.StudsOffset = Vector3.new(0, 2.5, 0)
+                billboard.AlwaysOnTop = true
+
+                local nameLabel = Instance.new("TextLabel", billboard)
+                nameLabel.Size = UDim2.new(1, 0, 0.5, 0)
+                nameLabel.BackgroundTransparency = 1
+                nameLabel.Text = v.Name
+                nameLabel.TextColor3 = Color3.fromRGB(0, 255, 0)
+                nameLabel.TextScaled = true
+                nameLabel.Font = Enum.Font.SourceSansBold
+
+                local timeLabel = Instance.new("TextLabel", billboard)
+                timeLabel.Size = UDim2.new(1, 0, 0.5, 0)
+                timeLabel.Position = UDim2.new(0, 0, 0.5, 0)
+                timeLabel.BackgroundTransparency = 1
+                timeLabel.TextColor3 = Color3.Yellow
+                timeLabel.TextScaled = true
+                timeLabel.Font = Enum.Font.SourceSansBold
+                timeLabel.Text = os.date("%H:%M:%S")
+
+                fruitsESP[v] = {Box = box, Billboard = billboard, TimeLabel = timeLabel}
+            elseif fruitsESP[v] and handle then
+                fruitsESP[v].TimeLabel.Text = os.date("%H:%M:%S")
+            elseif fruitsESP[v] and not handle then
+                fruitsESP[v].Box:Destroy()
+                fruitsESP[v].Billboard:Destroy()
+                fruitsESP[v] = nil
+            end
+        end
+    end
+end)
+
+-- ✅ Teleport trực tiếp đến vị trí trái cây
+local function teleportTo(pos)
+    local hrp = LocalPlayer.Character and LocalPlayer.Character:FindFirstChild("HumanoidRootPart")
+    if hrp then
+        hrp.CFrame = CFrame.new(pos)
+    end
+end
+
+-- ✅ Server hop
+local isHopping = false
+local function hopServer()
+    if isHopping then return end
+    isHopping = true
+
+    local servers = {}
+    local gamelink = "https://games.roblox.com/v1/games/"..game.PlaceId.."/servers/Public?sortOrder=Asc&limit=100"
+
+    local function serversearch(link)
+        local res = HttpService:JSONDecode(game:HttpGet(link))
+        for _, v in pairs(res.data) do
+            if v.playing and v.id ~= game.JobId then
+                table.insert(servers, v.id)
+            end
+        end
+        if res.nextPageCursor then
+            serversearch(gamelink.."&cursor="..res.nextPageCursor)
+        end
+    end
+
+    pcall(serversearch, gamelink)
+
+    if #servers > 0 then
+        TeleportService:TeleportToPlaceInstance(game.PlaceId, servers[math.random(1, #servers)])
+    else
+        task.delay(2, hopServer)
+    end
+end
+
+-- ✅ Tìm trái cây trong map
+local function getFruits()
+    local list = {}
+    for _, v in pairs(workspace:GetChildren()) do
+        if v:IsA("Tool") and string.find(v.Name:lower(), "fruit") and v:FindFirstChild("Handle") then
+            table.insert(list, v)
+        end
+    end
+    return list
+end
+
+-- ✅ Tự động nhặt trái rồi server hop nếu không có
+task.spawn(function()
+    while true do
+        task.wait(1)
+        local fruits = getFruits()
+        if #fruits > 0 then
+            for _, fruit in ipairs(fruits) do
+                local handle = fruit:FindFirstChild("Handle")
+                if handle then
+                    -- Teleport trực tiếp đến trái cây
+                    teleportTo(handle.Position)
+                    -- Tương tác với trái cây
+                    firetouchinterest(LocalPlayer.Character.HumanoidRootPart, handle, 0)
+                    firetouchinterest(LocalPlayer.Character.HumanoidRootPart, handle, 1)
+                    task.wait(0.5)
+                end
+            end
+            -- Đợi 2 giây trước khi thử hop server nếu không tìm thấy trái cây
+            task.wait(2)
+        else
+            hopServer()
+            break
+        end
+    end
+end)
